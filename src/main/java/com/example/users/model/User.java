@@ -37,5 +37,9 @@ public class User {
 	})
 	@JsonIgnore
 	private Set <Role> role = new HashSet<>();
+	
+	@OneToMany(mappedBy = "user")
+	@JsonIgnore
+	private Set<Email> email = new HashSet<>();
 
 }
