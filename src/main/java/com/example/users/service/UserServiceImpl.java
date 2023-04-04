@@ -31,5 +31,40 @@ public class UserServiceImpl implements UserService {
 	public List<User> getAllUsers() {
 		return userRepository.findAll();
 	}
+
+	@Override
+	public User getUserById(Long id) {
+		return userRepository.findById(id).orElseThrow(() ->
+		new ResourceNotFoundException("User", "Id", id));
+	}
+
+	@Override
+	public User updateUser(User user, Long id) {
+		User existingUser = userRepository.findById(id).orElseThrow(() ->
+		new ResourceNotFoundException("User", "Id", id));
+		
+		existingUser.setUserName(user.getUserName());
+		
+		userRepository.save(existingUser);
+		
+		return existingUser;
+	}
+
+	@Override
+	public void deleteUser(Long id) {
+		User existingUser = userRepository.findById(id).orElseThrow(() ->
+		new ResourceNotFoundException("User", "Id", id));
+		
+		userRepository.deleteById(existingUser.getUserId());
+	}
+
+	@Override
+	public Optional<List<User>> getUsersOrderByName(int page, int rows) {
+		Pageable list = PageRequest.of(page, rows);
+		
+		return userRepository.findByOrderByUserName(list);
+	}
 	
+	
+
 }

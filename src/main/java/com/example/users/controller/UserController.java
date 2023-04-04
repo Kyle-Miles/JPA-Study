@@ -43,4 +43,30 @@ public class UserController {
 				userService.getAllUsers(),HttpStatus.OK);
 	}
 	
+	@GetMapping("{user_id}")
+	public ResponseEntity<User> getUserById(
+			@PathVariable("user_id") Long id) {
+		return new ResponseEntity<User>(userService.getUserById(id), HttpStatus.OK);
+	}
+	
+	@PutMapping("{user_id}")
+	public ResponseEntity<User> updateUser(
+			@PathVariable("user_id") Long id,
+			@RequestBody User user) {
+		return new ResponseEntity<User>(userService.updateUser(user, id), HttpStatus.OK);
+	}
+	
+	@DeleteMapping("{user_id}")
+	public ResponseEntity<String> deleteUser(
+			@PathVariable("user_id") Long id) {
+		userService.deleteUser(id);
+		return new ResponseEntity<String>("User " + id + " has been deleted...", HttpStatus.OK);
+	}
+	
+	@GetMapping("/pages")
+	public ResponseEntity<Optional<List<User>>> getUsersOrderByName(
+			int page, int rows) {
+		return new ResponseEntity<Optional<List<User>>>(userService.getUsersOrderByName(page-1, rows), HttpStatus.OK);
+	}
+	
 }
