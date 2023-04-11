@@ -13,8 +13,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.users.dto.RoleDTO;
+import com.example.users.dto.UserDTO;
 import com.example.users.model.User;
 import com.example.users.service.UserService;
 
@@ -32,41 +35,43 @@ public class UserController {
 	
 	@PostMapping()
 	public ResponseEntity<User> saveUser(
-			@RequestBody User user) {
+			@RequestBody UserDTO userDto,
+			@RequestParam Long roleId) {
 		return new ResponseEntity<User>(
-				userService.saveUser(user),HttpStatus.CREATED);
+				userService.saveUser(userDto, roleId),HttpStatus.CREATED);
 	}
 	
 	@GetMapping
-	public ResponseEntity<List<User>> getAllUser() {
-		return new ResponseEntity<List<User>>(
+	public ResponseEntity<List<UserDTO>> getAllUser() {
+		return new ResponseEntity<List<UserDTO>>(
 				userService.getAllUsers(),HttpStatus.OK);
 	}
 	
 	@GetMapping("{user_id}")
-	public ResponseEntity<User> getUserById(
+	public ResponseEntity<List<UserDTO>> getUserById(
 			@PathVariable("user_id") Long id) {
-		return new ResponseEntity<User>(userService.getUserById(id), HttpStatus.OK);
+		return new ResponseEntity<List<UserDTO>>(userService.getUserById(id), HttpStatus.OK);
 	}
 	
 	@PutMapping("{user_id}")
 	public ResponseEntity<User> updateUser(
-			@PathVariable("user_id") Long id,
-			@RequestBody User user) {
-		return new ResponseEntity<User>(userService.updateUser(user, id), HttpStatus.OK);
+			@PathVariable("user_id") Long userId,
+			@RequestParam("role_id") Long roleId,
+			@RequestBody UserDTO userDto) {
+		return new ResponseEntity<User>(userService.updateUser(userDto, userId, roleId), HttpStatus.OK);
 	}
 	
 	@DeleteMapping("{user_id}")
 	public ResponseEntity<String> deleteUser(
-			@PathVariable("user_id") Long id) {
-		userService.deleteUser(id);
-		return new ResponseEntity<String>("User " + id + " has been deleted...", HttpStatus.OK);
+			@RequestBody UserDTO userDto) {
+		userService.deleteUser(userDto);
+		return new ResponseEntity<String>("User " + userDto + " has been deleted...", HttpStatus.OK);
 	}
 	
 	@GetMapping("/pages")
-	public ResponseEntity<Optional<List<User>>> getUsersOrderByName(
+	public ResponseEntity<List<UserDTO>> getUsersOrderByName(
 			int page, int rows) {
-		return new ResponseEntity<Optional<List<User>>>(userService.getUsersOrderByName(page-1, rows), HttpStatus.OK);
+		return new ResponseEntity<List<UserDTO>>(userService.getUsersOrderByName(page-1, rows), HttpStatus.OK);
 	}
 	
 }
