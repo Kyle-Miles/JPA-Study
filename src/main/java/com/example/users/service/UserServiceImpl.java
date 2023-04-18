@@ -2,21 +2,23 @@ package com.example.users.service;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.example.users.dto.RoleDTO;
+import com.example.users.dto.SecurityUserDTO;
 import com.example.users.dto.UserDTO;
 import com.example.users.exception.ResourceNotFoundException;
 import com.example.users.model.Email;
 import com.example.users.model.Role;
 import com.example.users.model.User;
+import com.example.users.repository.EmailRepository;
 import com.example.users.repository.RoleRepository;
 import com.example.users.repository.UserRepository;
 
@@ -25,21 +27,34 @@ public class UserServiceImpl implements UserService {
 	
 	private UserRepository userRepository;
 	private RoleRepository roleRepository;
+	private EmailRepository emailRepository;
 	
 	@Autowired
-	public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository) {
+	public UserServiceImpl(UserRepository userRepository
+			, RoleRepository roleRepository, EmailRepository emailRepository) {
 		this.userRepository = userRepository;
 		this.roleRepository = roleRepository;
+		this.emailRepository = emailRepository;
+	}
+	
+	public PasswordEncoder getPasswordEncoder() {
+		return new BCryptPasswordEncoder();
 	}
 
 	@Override
-	public User saveUser(UserDTO userDto, Long roleId) {
+	public User saveUser(SecurityUserDTO userDto, Long roleId) {
 		User newUser = new User();
 		Role existingRole = roleRepository.findById(roleId).orElseThrow(() ->
 		new ResourceNotFoundException("Role", "Id", roleId));
 		
 		existingRole.setRoleId(roleId);
+		
+		newUser.setPassword(userDto.password());
+		String password = getPasswordEncoder().encode(newUser.getPassword()).toString();
+		newUser.setPassword(password);
+		
 		newUser.setUserName(userDto.name());
+		newUser.setEnabled(userDto.active());
 		
 		Set <Role> setExistingRole = new HashSet<>();
 		setExistingRole.add(existingRole);
@@ -91,14 +106,19 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public User updateUser(UserDTO userDto, Long userId, Long roleId) {
+	public User updateUser(SecurityUserDTO userDto, Long userId, Long roleId) {
 		User existingUser = userRepository.findById(userId).orElseThrow(() ->
 		new ResourceNotFoundException("User", "Id", userId));
 		
 		Role existingRole = roleRepository.findById(roleId).orElseThrow(() ->
 		new ResourceNotFoundException("Role", "Id", roleId));
 		
+		existingUser.setPassword(userDto.password());
+		String password = getPasswordEncoder().encode(existingUser.getPassword()).toString();
+		existingUser.setPassword(password);
+		
 		existingUser.setUserName(userDto.name());
+		existingUser.setEnabled(userDto.active());
 		
 		existingRole.setRoleId(roleId);
 		existingRole.getRoleName();
@@ -114,13 +134,17 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public void deleteUser(UserDTO userDto) {
-		User existingUser = userRepository.findById(userDto.id()).orElseThrow(() ->
-		new ResourceNotFoundException("User", "Id", userDto.id()));
+	public void deleteUser(Long id) {
+		User existingUser = userRepository.findById(id).orElseThrow(() ->
+		new ResourceNotFoundException("User", "Id", id));
 		
-		existingUser.setUserId(userDto.id());
+		Email existingEmail = emailRepository.findByUser(existingUser);
 		
-		userRepository.deleteById(userDto.id());
+		if (emailRepository.findByUser(existingUser) != null) {
+			emailRepository.delete(existingEmail);
+		}
+		
+		userRepository.deleteById(id);
 	}
 
 	@Override
