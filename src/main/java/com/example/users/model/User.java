@@ -28,6 +28,10 @@ public class User {
 	
 	private String userName;
 	
+	private String password;
+	
+	private boolean enabled;
+	
 	@ManyToMany
 	@JoinTable(name = "user_role",
 	joinColumns = {

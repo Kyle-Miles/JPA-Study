@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.users.dto.RoleDTO;
+import com.example.users.dto.SecurityUserDTO;
 import com.example.users.dto.UserDTO;
 import com.example.users.model.User;
 import com.example.users.service.UserService;
@@ -35,7 +36,7 @@ public class UserController {
 	
 	@PostMapping()
 	public ResponseEntity<User> saveUser(
-			@RequestBody UserDTO userDto,
+			@RequestBody SecurityUserDTO userDto,
 			@RequestParam Long roleId) {
 		return new ResponseEntity<User>(
 				userService.saveUser(userDto, roleId),HttpStatus.CREATED);
@@ -57,15 +58,16 @@ public class UserController {
 	public ResponseEntity<User> updateUser(
 			@PathVariable("user_id") Long userId,
 			@RequestParam("role_id") Long roleId,
-			@RequestBody UserDTO userDto) {
+			@RequestBody SecurityUserDTO userDto) {
 		return new ResponseEntity<User>(userService.updateUser(userDto, userId, roleId), HttpStatus.OK);
 	}
 	
 	@DeleteMapping("{user_id}")
 	public ResponseEntity<String> deleteUser(
-			@RequestBody UserDTO userDto) {
-		userService.deleteUser(userDto);
-		return new ResponseEntity<String>("User " + userDto + " has been deleted...", HttpStatus.OK);
+			@PathVariable("user_id") Long id) {
+		String getUser = userService.getUserById(id).toString();
+		userService.deleteUser(id);
+		return new ResponseEntity<String>("User " + getUser + " has been deleted...", HttpStatus.OK);
 	}
 	
 	@GetMapping("/pages")
